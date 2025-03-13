@@ -1,0 +1,26 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #f0f0f0;
+}
+
+.modules {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px;
+}
+
+.module {
+    border: 1px solid #ccc;
+    padding: 20px;
+    background-color: white;
+    border-radius: 5px;
+}
+
+.animations img {
+    width: 200px;
+    margin: 10px;
+}
+
+.success { color: green; }
+.error { color: red; }

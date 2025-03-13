@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Sports Tournament Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        /* Same styles as provided */
+        :where([class^="ri-"])::before { content: "\f3c2"; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(5px); z-index: 1000; }
+        .modal.show { display: flex; }
+        @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+        .navbar-fixed { animation: slideDown 0.3s ease-out; }
+        @keyframes float { 0% { transform: translateY(0px) scale(1); } 25% { transform: translateY(-15px) scale(1.02); } 50% { transform: translateY(0px) scale(1.05); } 75% { transform: translateY(-10px) scale(1.02); } 100% { transform: translateY(0px) scale(1); } }
+        @keyframes cardHover { 0% { transform: scale(1) translateZ(0); } 50% { transform: scale(1.05) translateZ(50px); } 100% { transform: scale(1) translateZ(0); } }
+        .float-animation { animation: float 6s ease-in-out infinite; }
+        .card-3d { transition: transform 0.3s ease-out; transform-style: preserve-3d; }
+        .card-3d:hover { animation: cardHover 1s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+        @keyframes scaleIn { 0% { transform: scale(0.3) translateY(100px); opacity: 0; } 70% { transform: scale(1.1) translateY(-10px); opacity: 0.7; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
+        .scale-in { animation: scaleIn 0.5s ease-out; }
+        @keyframes rotateIn { 0% { transform: perspective(1000px) rotateY(-90deg) translateX(-100px); opacity: 0; } 50% { transform: perspective(1000px) rotateY(-20deg) translateX(-50px); opacity: 0.5; } 100% { transform: perspective(1000px) rotateY(0) translateX(0); opacity: 1; } }
+        .rotate-in { animation: rotateIn 0.8s ease-out; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { primary: '#1e40af', secondary: '#0ea5e9' },
+                    borderRadius: { 'none': '0px', 'sm': '4px', 'DEFAULT': '8px', 'md': '12px', 'lg': '16px', 'xl': '20px', '2xl': '24px', '3xl': '32px', 'full': '9999px', 'button': '8px' }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-white min-h-screen">
+    <nav id="navbar" class="fixed w-full z-50 transition-all duration-300">
+        <div class="container mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center">
+                <span class="text-3xl font-['Pacifico'] text-white">Sportify</span>
+            </div>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="{{ url_for('index') }}" class="text-white hover:text-secondary transition-colors">Home</a>
+                <a href="#" class="text-white hover:text-secondary transition-colors">Tournaments</a>
+                <a href="{{ url_for('schedule') }}" class="text-white hover:text-secondary transition-colors">Teams</a>
+                <a href="#" class="text-white hover:text-secondary transition-colors">Results</a>
+                <a href="#" class="text-white hover:text-secondary transition-colors">About</a>
+                <button onclick="showLoginModal()" class="flex items-center space-x-2 bg-white text-primary px-6 py-2 !rounded-button hover:bg-opacity-90 transition-all cursor-pointer">
+                    <i class="ri-user-line w-5 h-5 flex items-center justify-center"></i>
+                    <span>Login</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <header class="relative min-h-screen flex items-center" style="background-image: url('https://public.readdy.ai/ai/img_res/4f233032bd09e8a79e987dbbfefeed9c.jpg'); background-size: cover; background-position: center;">
+        <div class="absolute inset-0 bg-gradient-to-r from-primary/80 to-transparent"></div>
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="max-w-3xl scale-in">
+                <h1 class="text-5xl font-bold text-white mb-6 float-animation">College Sports Tournament Management System</h1>
+                <p class="text-xl text-white/90 mb-8">Streamline your college sports tournaments with our comprehensive management platform.</p>
+                <div class="flex space-x-4">
+                    <a href="{{ url_for('register_team') }}" class="bg-secondary text-white px-8 py-3 !rounded-button hover:bg-opacity-90 transition-all cursor-pointer">ASL (Football)</a>
+                    <a href="{{ url_for('register_team') }}" class="bg-white text-primary px-8 py-3 !rounded-button hover:bg-opacity-90 transition-all cursor-pointer">APL (Cricket)</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="py-20 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <h2 class="text-3xl font-bold text-center mb-16">Upcoming Matches</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {% for match in matches %}
+                <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow card-3d">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-sm text-gray-500">{{ match.date }}</span>
+                        <span class="bg-{{ 'primary' if match.sport == 'ASL' else 'secondary' }}/10 text-{{ 'primary' if match.sport == 'ASL' else 'secondary' }} px-3 py-1 rounded-full text-sm">{{ match.sport }}</span>
+                    </div>
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="text-center">
+                            <div class="w-16 h-16 bg-gray-100 rounded-full mb-2 flex items-center justify-center">
+                                <i class="ri-team-line text-2xl text-primary"></i>
+                            </div>
+                            <p class="font-semibold">{{ match.team1.name }}</p>
+                        </div>
+                        <div class="text-2xl font-bold text-gray-400">VS</div>
+                        <div class="text-center">
+                            <div class="w-16 h-16 bg-gray-100 rounded-full mb-2 flex items-center justify-center">
+                                <i class="ri-team-line text-2xl text-secondary"></i>
+                            </div>
+                            <p class="font-semibold">{{ match.team2.name }}</p>
+                        </div>
+                    </div>
+                    <div class="text-center text-sm text-gray-500">
+                        <p>{{ match.location or 'TBD' }} • {{ match.time or 'TBD' }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <div id="loginModal" class="modal">
+        <div class="bg-white w-full max-w-md m-auto rounded-lg p-8 scale-in">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold">Login</h3>
+                <button onclick="hideLoginModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="ri-close-line w-6 h-6 flex items-center justify-center"></i>
+                </button>
+            </div>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <p class="{{ 'text-green-600' if category == 'success' else 'text-red-600' }}">{{ message }}</p>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            <form method="POST" action="{{ url_for('login') }}" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input type="email" name="email" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input type="password" name="password" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                </div>
+                <div class="flex items-center justify-between">
+                    <label class="flex items-center">
+                        <input type="checkbox" class="mr-2">
+                        <span class="text-sm">Remember me</span>
+                    </label>
+                    <a href="#" class="text-sm text-primary hover:text-opacity-80">Forgot password?</a>
+                </div>
+                <button type="submit" class="w-full bg-primary text-white py-3 !rounded-button hover:bg-opacity-90 transition-all cursor-pointer">
+                    Sign in
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h4 class="text-xl font-bold mb-4">About</h4>
+                    <p class="text-gray-400">College Sports Tournament Management System - Streamlining sports events since 2025.</p>
+                </div>
+                <div>
+                    <h4 class="text-xl font-bold mb-4">Quick Links</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">Tournaments</a></li>
+                        <li><a href="{{ url_for('schedule') }}" class="text-gray-400 hover:text-white">Teams</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Results</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-xl font-bold mb-4">Follow Us</h4>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="ri-facebook-fill w-6 h-6 flex items-center justify-center"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="ri-twitter-fill w-6 h-6 flex items-center justify-center"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="ri-instagram-fill w-6 h-6 flex items-center justify-center"></i></a>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-xl font-bold mb-4">Newsletter</h4>
+                    <form class="flex">
+                        <input type="email" placeholder="Your email" class="flex-1 px-4 py-2 rounded-l-md border-none focus:ring-2 focus:ring-primary">
+                        <button type="submit" class="bg-primary text-white px-6 py-2 !rounded-r-md hover:bg-opacity-90 transition-all cursor-pointer">Subscribe</button>
+                    </form>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
+                <p>© 2025 College Sports Tournament Management System. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        const navbar = document.getElementById('navbar');
+        const loginModal = document.getElementById('loginModal');
+        document.querySelectorAll('.card-3d').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const rotateX = (y - centerY) / 20;
+                const rotateY = (centerX - x) / 20;
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0)';
+            });
+        });
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('bg-primary', 'shadow-lg', 'navbar-fixed');
+            } else {
+                navbar.classList.remove('bg-primary', 'shadow-lg', 'navbar-fixed');
+            }
+        });
+        function showLoginModal() { loginModal.classList.add('show'); }
+        function hideLoginModal() { loginModal.classList.remove('show'); }
+        window.onclick = (event) => { if (event.target == loginModal) hideLoginModal(); }
+    </script>
+</body>
+</html>
