@@ -1,1 +1,1 @@
-console.log("Tournament Management System Loaded");
+console.log("Script loaded");
