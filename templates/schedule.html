@@ -2,36 +2,163 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Match Schedule</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        :where([class^="ri-"])::before { content: "\f3c2"; }
+        @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+        .navbar-fixed { animation: slideDown 0.3s ease-out; }
+        @keyframes cardHover { 0% { transform: scale(1) translateZ(0); } 50% { transform: scale(1.05) translateZ(50px); } 100% { transform: scale(1) translateZ(0); } }
+        .card-3d { transition: transform 0.3s ease-out; transform-style: preserve-3d; }
+        .card-3d:hover { animation: cardHover 1s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+        @keyframes scaleIn { 0% { transform: scale(0.3) translateY(100px); opacity: 0; } 70% { transform: scale(1.1) translateY(-10px); opacity: 0.7; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
+        .scale-in { animation: scaleIn 0.5s ease-out; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { primary: '#1e40af', secondary: '#0ea5e9' },
+                    borderRadius: { 'none': '0px', 'sm': '4px', 'DEFAULT': '8px', 'md': '12px', 'lg': '16px', 'xl': '20px', '2xl': '24px', '3xl': '32px', 'full': '9999px', 'button': '8px' }
+                }
+            }
+        }
+    </script>
 </head>
-<body>
-    <div class="container">
-        <h1 class="text-center my-4">Match Schedule</h1>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Team 1</th>
-                    <th>Team 2</th>
-                    <th>Sport</th>
-                    <th>Date</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for match in matches %}
-                    <tr>
-                        <td>{{ match.team1_id }}</td>
-                        <td>{{ match.team2_id }}</td>
-                        <td>{{ match.sport }}</td>
-                        <td>{{ match.date }}</td>
-                        <td>{{ match.status }}</td>
-                    </tr>
-                {% else %}
-                    <tr><td colspan="5">No matches scheduled</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navbar (consistent with index.html) -->
+    <nav id="navbar" class="fixed w-full z-50 transition-all duration-300">
+        <div class="container mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center">
+                <span class="text-3xl font-['Pacifico'] text-white">Sportify</span>
+            </div>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="{{ url_for('index') }}" class="text-white hover:text-secondary transition-colors">Home</a>
+                <a href="#" class="text-white hover:text-secondary transition-colors">Tournaments</a>
+                <a href="{{ url_for('schedule') }}" class="text-white hover:text-secondary transition-colors">Teams</a>
+                <a href="#" class="text-white hover:text-secondary transition-colors">Results</a>
+                <a href="#" class="text-white hover:text-secondary transition-colors">About</a>
+                <button onclick="window.location.href='{{ url_for('login') }}'" class="flex items-center space-x-2 bg-white text-primary px-6 py-2 !rounded-button hover:bg-opacity-90 transition-all cursor-pointer">
+                    <i class="ri-user-line w-5 h-5 flex items-center justify-center"></i>
+                    <span>Login</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <section class="py-20 pt-32 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <h1 class="text-4xl font-bold text-center mb-16 scale-in">Match Schedule</h1>
+            {% if matches %}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {% for match in matches %}
+                        <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow card-3d">
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="text-sm text-gray-500">{{ match.date }} • {{ match.time or 'TBD' }}</span>
+                                <span class="bg-{{ 'primary' if match.sport == 'ASL' else 'secondary' }}/10 text-{{ 'primary' if match.sport == 'ASL' else 'secondary' }} px-3 py-1 rounded-full text-sm">{{ match.sport }}</span>
+                            </div>
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="text-center">
+                                    <div class="w-16 h-16 bg-gray-100 rounded-full mb-2 flex items-center justify-center">
+                                        <i class="ri-team-line text-2xl text-primary"></i>
+                                    </div>
+                                    <p class="font-semibold">{{ match.team1.name }}</p>
+                                    <p class="text-sm text-gray-600">{{ match.score_team1 }}</p>
+                                </div>
+                                <div class="text-2xl font-bold text-gray-400">VS</div>
+                                <div class="text-center">
+                                    <div class="w-16 h-16 bg-gray-100 rounded-full mb-2 flex items-center justify-center">
+                                        <i class="ri-team-line text-2xl text-secondary"></i>
+                                    </div>
+                                    <p class="font-semibold">{{ match.team2.name }}</p>
+                                    <p class="text-sm text-gray-600">{{ match.score_team2 }}</p>
+                                </div>
+                            </div>
+                            <div class="text-center text-sm text-gray-500 mb-4">
+                                <p>{{ match.location or 'TBD' }}</p>
+                                <p>Status: <span class="font-semibold {{ 'text-green-600' if match.status == 'Completed' else 'text-yellow-600' }}">{{ match.status }}</span></p>
+                            </div>
+                            {% if match.status == 'Scheduled' %}
+                                <a href="{{ url_for('update_score', match_id=match.id) }}" class="block text-center bg-primary text-white py-2 rounded-md hover:bg-opacity-90 transition-all">Update Score</a>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-center text-gray-600 text-lg">No matches scheduled</p>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Footer (consistent with index.html) -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h4 class="text-xl font-bold mb-4">About</h4>
+                    <p class="text-gray-400">College Sports Tournament Management System - Streamlining sports events since 2025.</p>
+                </div>
+                <div>
+                    <h4 class="text-xl font-bold mb-4">Quick Links</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">Tournaments</a></li>
+                        <li><a href="{{ url_for('schedule') }}" class="text-gray-400 hover:text-white">Teams</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Results</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-xl font-bold mb-4">Follow Us</h4>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="ri-facebook-fill w-6 h-6 flex items-center justify-center"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="ri-twitter-fill w-6 h-6 flex items-center justify-center"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="ri-instagram-fill w-6 h-6 flex items-center justify-center"></i></a>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-xl font-bold mb-4">Newsletter</h4>
+                    <form class="flex">
+                        <input type="email" placeholder="Your email" class="flex-1 px-4 py-2 rounded-l-md border-none focus:ring-2 focus:ring-primary">
+                        <button type="submit" class="bg-primary text-white px-6 py-2 !rounded-r-md hover:bg-opacity-90 transition-all cursor-pointer">Subscribe</button>
+                    </form>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
+                <p>© 2025 College Sports Tournament Management System. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const navbar = document.getElementById('navbar');
+        document.querySelectorAll('.card-3d').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const rotateX = (y - centerY) / 20;
+                const rotateY = (centerX - x) / 20;
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0)';
+            });
+        });
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('bg-primary', 'shadow-lg', 'navbar-fixed');
+            } else {
+                navbar.classList.remove('bg-primary', 'shadow-lg', 'navbar-fixed');
+            }
+        });
+    </script>
 </body>
 </html>

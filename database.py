@@ -10,7 +10,7 @@ class User(db.Model):
 class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    sport = db.Column(db.String(10), nullable=False)  # ASL or APL
+    sport = db.Column(db.String(10), nullable=False)  
     captain = db.Column(db.String(100), nullable=False)
 
 class Match(db.Model):
@@ -20,9 +20,9 @@ class Match(db.Model):
     team1 = db.relationship('Team', foreign_keys=[team1_id])
     team2 = db.relationship('Team', foreign_keys=[team2_id])
     date = db.Column(db.String(20), nullable=False)
-    time = db.Column(db.String(10), nullable=True)  # e.g., "3:00 PM"
-    location = db.Column(db.String(100), nullable=True)  # e.g., "Central Stadium"
+    time = db.Column(db.String(10), nullable=True)
+    location = db.Column(db.String(100), nullable=True)
     score_team1 = db.Column(db.Integer, default=0)
     score_team2 = db.Column(db.Integer, default=0)
-    sport = db.Column(db.String(10), nullable=False)  # ASL or APL
+    sport = db.Column(db.String(10), nullable=False)
     status = db.Column(db.String(20), default='Scheduled')

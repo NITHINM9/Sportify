@@ -6,30 +6,25 @@ app.config['SECRET_KEY'] = 'your-secret-key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tournament.db'
 db.init_app(app)
 
-# Function to seed the database with sample data
 def seed_database():
     with app.app_context():
-        # Check if the database is empty
         if not Team.query.first():
-            # Add sample teams
-            team1 = Team(name="Team Alpha", sport="ASL", captain="John Doe")
-            team2 = Team(name="Team Beta", sport="ASL", captain="Jane Smith")
-            team3 = Team(name="Team Delta", sport="APL", captain="Mike Ross")
-            team4 = Team(name="Team Gamma", sport="APL", captain="Sara Lee")
+            team1 = Team(name="Team Alpha", sport="ASL", captain="Virat")
+            team2 = Team(name="Team Beta", sport="ASL", captain="Sanjay")
+            team3 = Team(name="Team Delta", sport="APL", captain="Nazna")
+            team4 = Team(name="Team Gamma", sport="APL", captain="Riya")
             db.session.add_all([team1, team2, team3, team4])
             db.session.commit()
 
-            # Add sample matches
             match1 = Match(team1_id=team1.id, team2_id=team2.id, date="March 15, 2025", time="3:00 PM", location="Central Stadium", sport="ASL", status="Scheduled")
             match2 = Match(team1_id=team3.id, team2_id=team4.id, date="March 16, 2025", time="2:30 PM", location="Cricket Ground", sport="APL", status="Scheduled")
             db.session.add_all([match1, match2])
             db.session.commit()
 
-# Create database tables and seed data
 with app.app_context():
-    db.drop_all()  # Drop existing tables (optional if file is deleted)
-    db.create_all()  # Create new tables
-    seed_database()  # Add sample data
+    db.drop_all()  
+    db.create_all()  
+    seed_database()  
 
 @app.route('/')
 def index():
@@ -66,6 +61,19 @@ def register_team():
 def schedule():
     matches = Match.query.all()
     return render_template('schedule.html', matches=matches)
+
+@app.route('/update_score/<int:match_id>', methods=['GET', 'POST'])
+def update_score(match_id):
+    match = Match.query.get_or_404(match_id)
+    if request.method == 'POST':
+        match.score_team1 = int(request.form['score_team1'])
+        match.score_team2 = int(request.form['score_team2'])
+        match.status = 'Completed'
+        db.session.commit()
+        flash('Score updated successfully!', 'success')
+        return redirect(url_for('schedule'))
+    return render_template('update_score.html', match=match)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
